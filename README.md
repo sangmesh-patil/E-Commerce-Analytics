@@ -2,7 +2,7 @@
 
 ## 📌 Project Overview
 
-This project analyzes the Olist Brazilian E-Commerce Dataset, which contains approximately 100,000 orders from 2016 to 2018. The goal is to build a complete end-to-end data pipeline that covers raw data ingestion, cleaning, normalization, and analytics-ready schema design.
+This project analyzes the Olist Brazilian E-Commerce Dataset, which contains approximately 100,000 orders from 2016 to 2018. The goal is to build a complete end-to-end data pipeline that covers raw data ingestion, transformation, and analytics-ready schema design.
 
 The repository demonstrates how raw transactional e-commerce data can be transformed into a structured, reliable, and analytics-ready relational database using SQL best practices. It focuses on:
 
@@ -221,7 +221,7 @@ kaggle datasets download -d olistbr/brazilian-ecommerce
 unzip brazilian-ecommerce.zip -d ./Data/
 ```
 
-> Make sure the CSV files are inside the `Data/` folder before running the SQL scripts.
+> **Important:** Make sure all CSV files are extracted into the `Data/` folder before proceeding to the next steps. Verify the folder structure matches the layout above.
 
 ### Step 2: Clone the Repository
 
@@ -245,43 +245,58 @@ If you are using the terminal, this is also valid:
 psql -U postgres -d postgres -c "CREATE DATABASE ecommerce_analytics;"
 ```
 
-### Step 4: Load the Raw Data
+### Step 4: Run the Two Core Pipeline Scripts
 
-The first SQL script creates staging tables and imports the raw Kaggle CSV files.
+After ensuring all CSV files are in the `Data/` folder and the database is created, execute the two main transformation scripts in order:
 
-Run it from the project root:
+#### Script 1: Create Staging Tables and Load Raw Data
+
+Run the first script to create staging tables and load all raw CSV files into PostgreSQL:
 
 ```bash
 psql -U postgres -d ecommerce_analytics -f SQL_Scripts/01_DDL_and_Data_Load.sql
 ```
 
-Alternatively, inside psql:
+Or inside psql:
 
 ```sql
 \c ecommerce_analytics
 \i SQL_Scripts/01_DDL_and_Data_Load.sql
 ```
 
-This script does the following:
+This script performs:
+- Creates staging tables with raw column structures matching the Kaggle CSV files
+- Loads each CSV file into PostgreSQL staging tables
+- Verifies data availability for transformation
 
-- Creates the required staging tables
-- Defines raw column structures matching the Kaggle CSV files
-- Loads each CSV into PostgreSQL
-- Verifies that the data is available for transformation
+After successful completion, you should see output showing row counts for each imported raw table.
 
-After the script runs successfully, you should see output showing row counts for each imported raw table.
+#### Script 2: Clean, Deduplicate, and Populate the 3NF Schema
 
-### Step 5: Run the Remaining Transformation Scripts
+Run the second script to clean the data and populate the normalized 3NF schema:
 
-After the raw data is loaded, continue in order:
+```bash
+psql -U postgres -d ecommerce_analytics -f SQL_Scripts/02_Data_Cleaning_and_Load.sql
+```
+
+Or inside psql:
 
 ```sql
--- 1. Create schema and load raw data
-\i SQL_Scripts/01_DDL_and_Data_Load.sql
-
--- 2. Clean and transform data into normalized tables
 \i SQL_Scripts/02_Data_Cleaning_and_Load.sql
+```
 
+This script performs:
+- Data validation and quality checks
+- Deduplication logic
+- Transformation of staging data into normalized 3NF tables
+- Population of dimension and fact tables
+- Referential integrity enforcement
+
+### Step 5: Run the Additional Analytics Scripts (Optional)
+
+After the core pipeline is complete, you can explore advanced SQL techniques with the remaining scripts:
+
+```sql
 -- 3. Run analytical queries using subqueries and CTEs
 \i SQL_Scripts/03_Subqueries_and_CTEs.sql
 
@@ -295,7 +310,6 @@ After the raw data is loaded, continue in order:
 You can also run them through the command line:
 
 ```bash
-psql -U postgres -d ecommerce_analytics -f SQL_Scripts/02_Data_Cleaning_and_Load.sql
 psql -U postgres -d ecommerce_analytics -f SQL_Scripts/03_Subqueries_and_CTEs.sql
 psql -U postgres -d ecommerce_analytics -f SQL_Scripts/04_Window_Functions.sql
 psql -U postgres -d ecommerce_analytics -f SQL_Scripts/05_Optimization.sql
