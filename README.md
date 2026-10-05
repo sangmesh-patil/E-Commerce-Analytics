@@ -2,7 +2,7 @@
 
 ## 📌 Project Overview
 
-This project analyzes the Olist Brazilian E-Commerce Dataset, which contains approximately 100,000 orders from 2016 to 2018. The goal is to build a complete end-to-end data pipeline that covers raw data ingestion, staging, data cleaning, schema design, business analysis, and query optimization.
+This project analyzes the Olist Brazilian E-Commerce Dataset, which contains approximately 100,000 orders from 2016 to 2018. The goal is to build a complete end-to-end data pipeline that covers raw data ingestion, cleaning, normalization, and analytics-ready schema design.
 
 The repository demonstrates how raw transactional e-commerce data can be transformed into a structured, reliable, and analytics-ready relational database using SQL best practices. It focuses on:
 
@@ -162,38 +162,163 @@ E-Commerce-Analytics/
 
 ### Prerequisites
 
-- PostgreSQL / MySQL / SQL Server installed
-- SQL client such as DBeaver or pgAdmin
+- PostgreSQL (v12 or higher) installed and running
+- SQL client such as pgAdmin, DBeaver, or psql CLI
 - Git installed
+- Kaggle account to download the dataset
+- Python (optional, for Kaggle API automation)
 
-### Steps
+### Step 1: Download the Raw Dataset from Kaggle
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/E-Commerce-Analytics.git
-   ```
+#### Option A: Manual Download from the Kaggle Website
 
-2. Import the raw Olist dataset to your database directory or staging folder.
+1. Create a Kaggle account if you do not already have one.
+2. Go to the Olist dataset page:
+   https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+3. Click the Download button and accept the dataset terms if prompted.
+4. Extract the downloaded ZIP file to your local machine.
+5. Save the extracted CSVs in a folder such as:
 
-3. Run SQL scripts in order:
-   ```sql
-   -- 1. Create schema and load raw data
-   \i SQL_Scripts/01_DDL_and_Data_Load.sql
+```bash
+E-Commerce-Analytics/
+└── Data/
+    ├── olist_customers_dataset.csv
+    ├── olist_sellers_dataset.csv
+    ├── olist_products_dataset.csv
+    ├── olist_orders_dataset.csv
+    ├── olist_order_items_dataset.csv
+    ├── olist_order_payments_dataset.csv
+    ├── olist_order_reviews_dataset.csv
+    ├── olist_geolocation_dataset.csv
+    └── product_category_name_translation.csv
+```
 
-   -- 2. Clean and transform data
-   \i SQL_Scripts/02_Data_Cleaning_and_Load.sql
+#### Option B: Download via Kaggle API
 
-   -- 3. Run analytical queries and CTES
-   \i SQL_Scripts/03_Subqueries_and_CTEs.sql
+1. Install the Kaggle package:
 
-   -- 4. Explore window functions
-   \i SQL_Scripts/04_Window_Functions.sql
+```bash
+pip install kaggle
+```
 
-   -- 5. Performance optimization and indexing
-   \i SQL_Scripts/05_Optimization.sql
-   ```
+2. Create a Kaggle API token:
+   - Sign in to Kaggle
+   - Go to Account > Create New API Token
+   - Download the `kaggle.json` file
 
-4. Validate the output tables and run exploratory queries.
+3. Place the file in the correct location:
+
+```bash
+mkdir -p ~/.kaggle
+mv ~/Downloads/kaggle.json ~/.kaggle/kaggle.json
+chmod 600 ~/.kaggle/kaggle.json
+```
+
+4. Download and unzip the dataset:
+
+```bash
+kaggle datasets download -d olistbr/brazilian-ecommerce
+unzip brazilian-ecommerce.zip -d ./Data/
+```
+
+> Make sure the CSV files are inside the `Data/` folder before running the SQL scripts.
+
+### Step 2: Clone the Repository
+
+```bash
+git clone https://github.com/your-username/E-Commerce-Analytics.git
+cd E-Commerce-Analytics
+```
+
+### Step 3: Create the Database in PostgreSQL
+
+Open psql or pgAdmin and create the database:
+
+```sql
+CREATE DATABASE ecommerce_analytics;
+\c ecommerce_analytics
+```
+
+If you are using the terminal, this is also valid:
+
+```bash
+psql -U postgres -d postgres -c "CREATE DATABASE ecommerce_analytics;"
+```
+
+### Step 4: Load the Raw Data
+
+The first SQL script creates staging tables and imports the raw Kaggle CSV files.
+
+Run it from the project root:
+
+```bash
+psql -U postgres -d ecommerce_analytics -f SQL_Scripts/01_DDL_and_Data_Load.sql
+```
+
+Alternatively, inside psql:
+
+```sql
+\c ecommerce_analytics
+\i SQL_Scripts/01_DDL_and_Data_Load.sql
+```
+
+This script does the following:
+
+- Creates the required staging tables
+- Defines raw column structures matching the Kaggle CSV files
+- Loads each CSV into PostgreSQL
+- Verifies that the data is available for transformation
+
+After the script runs successfully, you should see output showing row counts for each imported raw table.
+
+### Step 5: Run the Remaining Transformation Scripts
+
+After the raw data is loaded, continue in order:
+
+```sql
+-- 1. Create schema and load raw data
+\i SQL_Scripts/01_DDL_and_Data_Load.sql
+
+-- 2. Clean and transform data into normalized tables
+\i SQL_Scripts/02_Data_Cleaning_and_Load.sql
+
+-- 3. Run analytical queries using subqueries and CTEs
+\i SQL_Scripts/03_Subqueries_and_CTEs.sql
+
+-- 4. Explore window functions and business analytics
+\i SQL_Scripts/04_Window_Functions.sql
+
+-- 5. Performance optimization and indexing
+\i SQL_Scripts/05_Optimization.sql
+```
+
+You can also run them through the command line:
+
+```bash
+psql -U postgres -d ecommerce_analytics -f SQL_Scripts/02_Data_Cleaning_and_Load.sql
+psql -U postgres -d ecommerce_analytics -f SQL_Scripts/03_Subqueries_and_CTEs.sql
+psql -U postgres -d ecommerce_analytics -f SQL_Scripts/04_Window_Functions.sql
+psql -U postgres -d ecommerce_analytics -f SQL_Scripts/05_Optimization.sql
+```
+
+### Step 6: Validate the Result
+
+Check that the final tables were created:
+
+```sql
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+ORDER BY table_name;
+```
+
+Example validation query:
+
+```sql
+SELECT COUNT(*) AS total_customers FROM dim_customers;
+SELECT COUNT(*) AS total_orders FROM fact_orders;
+SELECT COUNT(*) AS total_order_items FROM fact_order_items;
+```
 
 ---
 
