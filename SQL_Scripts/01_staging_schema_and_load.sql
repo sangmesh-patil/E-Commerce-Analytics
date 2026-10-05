@@ -84,6 +84,10 @@ CREATE TABLE order_reviews (
 );
 
 -- Load data from CSVs into staging tables
+-- NOTE: Replace the folder path below with your local machine path where the CSV files are stored.
+-- Example: 'C:/Users/YourName/Documents/E-Commerce-Analytics/Data/'
+--          or 'D:/SQL/E-Commerce-Analytics/Data/'
+-- Make sure the folder contains all CSV files before running this script.
 \copy geolocation FROM 'D:/SQL/E-Commerce-Analytics/data/olist_geolocation_dataset.csv' DELIMITER ',' CSV HEADER ENCODING 'UTF8';
 
 \copy customers FROM 'D:/SQL/E-Commerce-Analytics/data/olist_customers_dataset.csv' DELIMITER ',' CSV HEADER ENCODING 'UTF8';
